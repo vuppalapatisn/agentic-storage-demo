@@ -7,6 +7,7 @@ import com.example.agenticstorage.storage.FileVersionRepository;
 import com.example.agenticstorage.storage.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,9 +39,14 @@ public class AgenticStorageService {
     private final FileVersionRepository fileVersionRepo;
     private final AuditLogRepository auditLogRepo;
 
-    // Injected from SandboxConfig
+    // Injected from SandboxConfig. @Qualifier is required: these are raw Map/Set
+    // types, so without it Spring would collection-inject every matching bean by
+    // name instead of the specific bean we want here.
+    @Qualifier("agentSandboxMap")
     private final Map<String, String> agentSandboxMap;
+    @Qualifier("sandboxAllowedPaths")
     private final Map<String, Set<String>> sandboxAllowedPaths;
+    @Qualifier("highImpactOperations")
     private final Set<String> highImpactOperations;
 
     // ─────────────────────────────────────────────────────────────────────────

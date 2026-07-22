@@ -12,8 +12,14 @@ import java.util.Optional;
 @Repository
 public interface FileVersionRepository extends JpaRepository<FileVersion, Long> {
 
+    // Returns the highest-version record for the file, but only if it is not
+    // archived. If the newest version is an ARCHIVE, the file is logically
+    // deleted and this returns empty (rather than resurrecting an older
+    // non-archived version).
     @Query("SELECT f FROM FileVersion f WHERE f.sandbox = :sandbox AND f.filePath = :path " +
-           "AND f.archived = false ORDER BY f.version DESC LIMIT 1")
+           "AND f.archived = false " +
+           "AND f.version = (SELECT MAX(f2.version) FROM FileVersion f2 " +
+           "WHERE f2.sandbox = :sandbox AND f2.filePath = :path)")
     Optional<FileVersion> findLatest(@Param("sandbox") String sandbox,
                                      @Param("path") String path);
 
