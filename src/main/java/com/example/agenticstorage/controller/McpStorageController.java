@@ -4,6 +4,8 @@ import com.example.agenticstorage.model.AuditLog;
 import com.example.agenticstorage.model.FileVersion;
 import com.example.agenticstorage.model.McpDtos.*;
 import com.example.agenticstorage.service.AgenticStorageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,12 +31,17 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/mcp")
 @RequiredArgsConstructor
+@Tag(name = "MCP Storage Tools",
+     description = "MCP-style storage tools with immutable versioning, sandboxing, and intent validation")
 public class McpStorageController {
 
     private final AgenticStorageService storageService;
 
     // ─── MCP Tool: write_file ─────────────────────────────────────────────────
 
+    @Operation(summary = "write_file",
+               description = "Writes content to a path in the agent's sandbox. Always creates a new "
+                       + "immutable version; never overwrites. Validates the path is within sandbox bounds.")
     @PostMapping("/tools/write_file")
     public ResponseEntity<McpResponse<FileVersion>> writeFile(
             @Valid @RequestBody WriteFileRequest request) {
@@ -57,6 +64,9 @@ public class McpStorageController {
 
     // ─── MCP Tool: read_file ──────────────────────────────────────────────────
 
+    @Operation(summary = "read_file",
+               description = "Reads a file from the agent's sandbox. Optionally reads a specific "
+                       + "historical version; omit version to get the latest active one.")
     @PostMapping("/tools/read_file")
     public ResponseEntity<McpResponse<FileVersion>> readFile(
             @Valid @RequestBody ReadFileRequest request) {
@@ -76,6 +86,9 @@ public class McpStorageController {
 
     // ─── MCP Tool: archive_file ───────────────────────────────────────────────
 
+    @Operation(summary = "archive_file",
+               description = "Logically deletes a file by creating a new archived version. History is "
+                       + "preserved. Requires a valid intent reason (intent validation, Safety Layer 3).")
     @PostMapping("/tools/archive_file")
     public ResponseEntity<McpResponse<FileVersion>> archiveFile(
             @Valid @RequestBody ArchiveFileRequest request) {
@@ -97,6 +110,8 @@ public class McpStorageController {
 
     // ─── MCP Tool: list_directory ─────────────────────────────────────────────
 
+    @Operation(summary = "list_directory",
+               description = "Lists all active (non-archived) files in the agent's sandbox.")
     @GetMapping("/tools/list_directory/{agentId}")
     public ResponseEntity<McpResponse<List<String>>> listDirectory(
             @PathVariable String agentId) {
@@ -112,6 +127,8 @@ public class McpStorageController {
 
     // ─── MCP Tool: file_history ───────────────────────────────────────────────
 
+    @Operation(summary = "file_history",
+               description = "Returns the full version history of a file — the complete audit trail.")
     @GetMapping("/tools/file_history/{agentId}")
     public ResponseEntity<McpResponse<List<FileVersion>>> fileHistory(
             @PathVariable String agentId,
@@ -128,6 +145,9 @@ public class McpStorageController {
 
     // ─── MCP Tool: rollback ───────────────────────────────────────────────────
 
+    @Operation(summary = "rollback",
+               description = "Restores a previous version by creating a new version with the old content. "
+                       + "The original versions remain intact.")
     @PostMapping("/tools/rollback")
     public ResponseEntity<McpResponse<FileVersion>> rollback(
             @RequestBody RollbackRequest request) {
@@ -150,6 +170,8 @@ public class McpStorageController {
 
     // ─── Audit Trail ──────────────────────────────────────────────────────────
 
+    @Operation(summary = "audit_trail",
+               description = "Returns the audit log for an agent — every operation attempted, allowed or denied.")
     @GetMapping("/audit/{agentId}")
     public ResponseEntity<McpResponse<List<AuditLog>>> auditLog(
             @PathVariable String agentId) {
